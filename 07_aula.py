@@ -69,14 +69,30 @@ def seleciona_tipo_conducao(tipo_conducao="Carro"):
 def retorna_tempo_total():
   xpath_tempo_rotas = '//div[@id="section-directions-trip-0"]//div[contains(text(), "min")]'
   wait = WebDriverWait(driver, timeout=3)
-  elemento_tempo = wait.until(EC.presence_of_element_located((By.XPATH, xpath_tempo_rotas)))
-  return int(elemento_tempo.text.replace(' min', ''))
+  wait.until(EC.presence_of_element_located((By.XPATH, xpath_tempo_rotas)))
+  # Re-localizar o elemento imediatamente antes de acessar .text para evitar StaleElementReferenceException
+  elemento_tempo = wait.until(EC.visibility_of_element_located((By.XPATH, xpath_tempo_rotas)))
+  texto_tempo = elemento_tempo.text
+  
+  # Verifica se contém horas
+  if 'h' in texto_tempo:
+    # Formato: "1 h 4 min" ou "2 h 30 min"
+    partes = texto_tempo.split('h')
+    horas = int(partes[0].strip())
+    minutos_texto = partes[1].replace('min', '').strip()
+    minutos = int(minutos_texto) if minutos_texto else 0
+    return horas * 60 + minutos
+  else:
+    # Formato: "45 min"
+    return int(texto_tempo.replace(' min', ''))
 
 
 def retorna_distancia_total():
   xpath_tempo_rotas = '//div[@id="section-directions-trip-0"]//div[contains(text(), "km")]'
   wait = WebDriverWait(driver, timeout=3)
-  elemento_tempo = wait.until(EC.presence_of_element_located((By.XPATH, xpath_tempo_rotas)))
+  wait.until(EC.presence_of_element_located((By.XPATH, xpath_tempo_rotas)))
+  # Re-localizar o elemento imediatamente antes de acessar .text para evitar StaleElementReferenceException
+  elemento_tempo = wait.until(EC.visibility_of_element_located((By.XPATH, xpath_tempo_rotas)))
   return float(elemento_tempo.text.replace(' km', '').replace(',', '.'))
 
 # ==================== FUNÇÕES PRINCIPAIS ====================
@@ -169,4 +185,4 @@ if __name__ == '__main__':
   solucao = gera_otimizacao(enderecos, distancia_pares)
   mostra_rota_otimizada(enderecos, solucao)
 
-  sleep(100)
+  sleep(3000)
